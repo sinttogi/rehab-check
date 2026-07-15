@@ -1,0 +1,508 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="default" />
+<meta name="apple-mobile-web-app-title" content="재활 체크" />
+<meta name="theme-color" content="#f5f7fb" />
+<link rel="manifest" href="manifest.json" />
+<title>남편 재활 체크</title>
+<style>
+  :root{
+    --bg:#f5f7fb; --card:#ffffff; --text:#1f2937; --muted:#6b7280;
+    --line:#d9dee8; --primary:#2457d6; --danger:#b42318; --ok:#147d45;
+    --shadow:0 4px 18px rgba(31,41,55,.08);
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0; font-family:-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Noto Sans KR",sans-serif;
+    background:var(--bg); color:var(--text); font-size:18px; line-height:1.5;
+    -webkit-text-size-adjust:100%;
+  }
+  .wrap{max-width:760px;margin:0 auto;padding:16px 14px 130px}
+  h1{font-size:28px;margin:6px 0 14px}
+  h2{font-size:24px;margin:0 0 12px}
+  h3{font-size:21px;margin:18px 0 10px}
+  .topbar{
+    position:sticky; top:0; z-index:20; background:rgba(245,247,251,.96);
+    backdrop-filter:blur(10px); padding:10px 0 12px;
+  }
+  .date-row{display:grid;grid-template-columns:1fr auto auto;gap:8px;align-items:center}
+  input[type="date"], input[type="text"], input[type="number"], input[type="email"],
+  input[type="password"], textarea, select{
+    width:100%; font:inherit; color:var(--text); background:#fff;
+    border:2px solid var(--line); border-radius:14px; padding:14px 15px;
+    min-height:54px;
+  }
+  textarea{min-height:84px;resize:vertical}
+  input:focus, textarea:focus, select:focus{outline:3px solid rgba(36,87,214,.18);border-color:var(--primary)}
+  .card{
+    background:var(--card); border-radius:20px; padding:18px; margin:14px 0;
+    box-shadow:var(--shadow);
+  }
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  .label{font-weight:700;margin:12px 0 6px}
+  .row{display:grid;grid-template-columns:minmax(96px,1fr) 1fr;gap:10px;align-items:center;margin:10px 0}
+  .check-row{
+    display:grid;grid-template-columns:46px 1fr;gap:12px;align-items:center;
+    min-height:58px;padding:8px 0;border-bottom:1px solid #eef1f5;
+  }
+  .check-row:last-child{border-bottom:0}
+  input[type="checkbox"]{
+    appearance:none;-webkit-appearance:none;width:38px;height:38px;border:3px solid #9aa5b1;border-radius:11px;
+    display:grid;place-items:center;background:#fff;margin:0;
+  }
+  input[type="checkbox"]:checked{background:var(--primary);border-color:var(--primary)}
+  input[type="checkbox"]:checked::after{content:"✓";font-size:28px;color:#fff;font-weight:800;line-height:1}
+  .times{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:10px}
+  .times label{display:flex;align-items:center;justify-content:center;gap:7px;border:2px solid var(--line);border-radius:14px;padding:10px 6px;background:#fff}
+  .times input[type="checkbox"]{width:30px;height:30px;border-radius:9px}
+  .fes-card{border:2px solid #e7ebf2;border-radius:16px;padding:14px;margin:12px 0}
+  .fes-head{font-weight:800;font-size:20px;margin-bottom:6px}
+  .lr{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px}
+  .med-group{margin-bottom:18px}
+  .btn{
+    font:inherit;font-weight:700;border:0;border-radius:16px;padding:15px 18px;
+    background:var(--primary);color:#fff;min-height:56px;cursor:pointer;width:100%;
+  }
+  .btn.secondary{background:#e8ecf5;color:var(--text)}
+  .btn.ok{background:var(--ok)}
+  .btn.danger{background:var(--danger)}
+  .btn:active{transform:scale(.99)}
+  .button-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .status{font-size:15px;color:var(--muted);margin-top:8px;min-height:22px}
+  .note{color:var(--muted);font-size:15px}
+  .small{font-size:15px;color:var(--muted)}
+  .screen{display:none}
+  .screen.active{display:block}
+  .tabbar{
+    position:fixed;left:0;right:0;bottom:0;z-index:30;
+    background:rgba(255,255,255,.97);border-top:1px solid var(--line);
+    display:grid;grid-template-columns:repeat(4,1fr);
+    padding:8px 8px calc(8px + env(safe-area-inset-bottom));
+  }
+  .tabbar button{
+    font:inherit;font-weight:700;font-size:17px;border:0;background:transparent;
+    color:var(--muted);padding:12px 4px;border-radius:14px;min-height:56px;cursor:pointer;
+  }
+  .tabbar button.active{background:#e8ecf5;color:var(--primary)}
+  .history-item{border:2px solid var(--line);border-radius:16px;padding:14px;margin:10px 0}
+  .history-item .btn{margin-top:10px}
+  #loginScreen{position:fixed;inset:0;background:var(--bg);z-index:100;overflow:auto;padding:24px 16px}
+  #loginScreen .box{max-width:460px;margin:8vh auto}
+  .err{color:var(--danger);font-weight:700;margin-top:10px;min-height:24px}
+  .badge{display:inline-block;font-size:14px;background:#e8ecf5;color:var(--muted);border-radius:999px;padding:4px 12px}
+</style>
+</head>
+<body>
+
+<!-- ===== 로그인 화면 ===== -->
+<div id="loginScreen">
+  <div class="box">
+    <h1>남편 재활 체크</h1>
+    <div class="card">
+      <p class="note">가족 공용 계정으로 한 번만 로그인하면 계속 유지됩니다.</p>
+      <div class="label">이메일</div>
+      <input id="loginEmail" type="email" autocomplete="username" placeholder="이메일 주소">
+      <div class="label">비밀번호</div>
+      <input id="loginPw" type="password" autocomplete="current-password" placeholder="비밀번호">
+      <div style="height:14px"></div>
+      <button class="btn" id="loginBtn">로그인</button>
+      <div style="height:10px"></div>
+      <button class="btn secondary" id="signupBtn">처음이면 계정 만들기</button>
+      <div class="err" id="loginErr"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== 앱 본체 ===== -->
+<div class="wrap" id="app" style="display:none">
+  <div class="topbar">
+    <h1>남편 매일 재활 체크</h1>
+    <div class="date-row">
+      <input id="recordDate" type="date" aria-label="기록 날짜">
+      <button class="btn secondary" id="todayBtn" style="width:auto;padding:15px 16px">오늘</button>
+      <button class="btn secondary" id="reloadBtn" style="width:auto;padding:15px 16px">새로고침</button>
+    </div>
+    <div class="status" id="saveStatus">자동 저장됩니다.</div>
+  </div>
+
+  <section id="screen-today" class="screen active">
+    <div class="card">
+      <h2>운동</h2>
+
+      <div class="fes-card">
+        <div class="fes-head">기립대</div>
+        <div class="grid2">
+          <div><div class="label">각도</div><input data-k="stand_angle" type="number" inputmode="decimal" placeholder="도"></div>
+          <div><div class="label">혈압</div><input data-k="stand_bp" type="text" placeholder="예: 120 / 80"></div>
+        </div>
+        <div class="check-row">
+          <input data-k="stand_fes_done" type="checkbox" aria-label="기립대 FES 종아리">
+          <div>
+            <b>FES 종아리, 피 올리기</b>
+            <div class="lr">
+              <input data-k="stand_fes_r" type="text" placeholder="오른쪽">
+              <input data-k="stand_fes_l" type="text" placeholder="왼쪽">
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <h3>FES 전기자극</h3>
+      <div id="fesList"></div>
+
+      <h3>운동실 FES</h3>
+      <div class="check-row">
+        <input data-k="gym_thigh_done" type="checkbox" aria-label="운동실 허벅지">
+        <div><b>허벅지</b><div class="lr">
+          <input data-k="gym_thigh_r" type="text" placeholder="오른쪽">
+          <input data-k="gym_thigh_l" type="text" placeholder="왼쪽">
+        </div></div>
+      </div>
+      <div class="check-row">
+        <input data-k="gym_triceps_done" type="checkbox" aria-label="운동실 삼두">
+        <div><b>삼두</b><div class="lr">
+          <input data-k="gym_triceps_r" type="text" placeholder="오른쪽">
+          <input data-k="gym_triceps_l" type="text" placeholder="왼쪽">
+        </div></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>반복 운동</h2>
+      <div id="repeatList"></div>
+    </div>
+  </section>
+
+  <section id="screen-meds" class="screen">
+    <div class="card">
+      <h2>약물</h2>
+      <div id="medList"></div>
+      <p class="note">트리티코 25mg 수면제는 현재 제외된 상태입니다.</p>
+    </div>
+    <div class="card">
+      <h2>영양제</h2>
+      <div id="suppList"></div>
+    </div>
+  </section>
+
+  <section id="screen-body" class="screen">
+    <div class="card">
+      <h2>몸 상태</h2>
+      <p class="note">그날 감각, 움직임, 변화만 짧게 기록하세요.</p>
+      <div id="bodyList"></div>
+    </div>
+    <div class="card">
+      <h2>메모</h2>
+      <textarea data-k="memo" placeholder="그 외 특이사항, 하고 싶은 말, 기록할 것"></textarea>
+    </div>
+  </section>
+
+  <section id="screen-history" class="screen">
+    <div class="card">
+      <h2>이전 기록</h2>
+      <div id="historyList"><p class="note">불러오는 중…</p></div>
+    </div>
+    <div class="card">
+      <h2>백업</h2>
+      <p class="note">기록은 인터넷에 저장되어 다른 기기에서도 보입니다. 가끔 파일로 백업해 두면 더 안전합니다.</p>
+      <div class="button-row">
+        <button class="btn ok" id="exportBtn">백업 파일 만들기</button>
+        <button class="btn danger" id="clearTodayBtn">이 날짜 비우기</button>
+      </div>
+    </div>
+    <div class="card">
+      <h2>계정</h2>
+      <p class="note" id="whoami"></p>
+      <button class="btn secondary" id="logoutBtn">로그아웃</button>
+    </div>
+  </section>
+</div>
+
+<nav class="tabbar" id="tabbar" aria-label="화면 선택" style="display:none">
+  <button data-screen="today" class="active">운동</button>
+  <button data-screen="meds">약 영양제</button>
+  <button data-screen="body">몸 상태</button>
+  <button data-screen="history">이전 기록</button>
+</nav>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+/* ===================================================================
+   설정 — 나중에 바꿀 일이 있으면 이 두 줄만 고치면 됩니다.
+   =================================================================== */
+const SUPABASE_URL = "https://omomjpheazterocyjdbf.supabase.co";
+const SUPABASE_KEY = "sb_publishable_RjsfmigWB_mOdXPzsX09LQ_HCLA_JtG";
+/* =================================================================== */
+
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
+  auth: { persistSession: true, autoRefreshToken: true, storage: window.localStorage }
+});
+
+/* ---------- 항목 정의 ---------- */
+const fesItems = [
+  ["calf","종아리"],["thigh","허벅지"],["abdomen","배"],["biceps","이두"],["triceps","삼두"]
+];
+const repeatItems = [
+  ["glove","장갑로봇, 손"],["ambubag","앰부백, 호흡"],["beads","구슬, 호흡 당기기"],["bike","자전거, 다리"]
+];
+const meds = {
+  "아침 6시":[["pregabalin_6","리리카캡슐 50mg — 1알"]],
+  "아침 식후":[
+    ["ditropan_am","동화디트로판정, 방광 — 0.5알"],
+    ["magmil_am","마그밀에스정, 변비 — 2알"],
+    ["mobi_am","모비졸로정 2mg — 1알"],
+    ["vimovo_am","비모보정 500/20mg — 1알"]
+  ],
+  "점심 오후 2시":[["pregabalin_2","리리카캡슐 50mg — 1알"]],
+  "점심 식후":[["magmil_lunch","마그밀에스정, 변비 — 2알"]],
+  "저녁 식후":[
+    ["ditropan_pm","동화디트로판정, 방광 — 0.5알"],
+    ["droxetine_pm","드록틴캡슐 60mg — 1알"],
+    ["magmil_pm","마그밀에스정, 변비 — 2알"],
+    ["vimovo_pm","비모보정 500/20mg — 1알"]
+  ],
+  "자기 전":[
+    ["pregabalin_bed","리리카캡슐 50mg — 2알"],
+    ["enafon_bed","에나폰정 5mg — 2알"]
+  ]
+};
+const supps = {
+  "아침":[
+    ["b12","비타민 B12 & 엽산"],["omega3","미니 RTG 오메가3"],
+    ["calcium","칼슘 & 마그네슘 + 비타민D 아연"],["bifidus_am","덴마크 비피더스 유산균"],
+    ["fos_am","FOS 유산균"],["carotin","JW 카로틴 C3 콤플렉스, 2알"],
+    ["vitc_am","고려은단 비타민C 1000, 2알"]
+  ],
+  "점심":[
+    ["nosefiction","리더뮨 노즈픽션"],["collagen","일양 콜라겐 비오틴"],
+    ["vitc_lunch","고려은단 비타민C 1000, 2알"]
+  ],
+  "저녁":[
+    ["bifidus_pm","덴마크 비피더스 유산균"],["fos_pm","FOS 유산균"],
+    ["vitc_pm","고려은단 비타민C 1000, 2알"]
+  ]
+};
+const bodyParts = ["대변","소변","손가락","손목","이두","삼두","발목","어깨","발가락","복근","허리","엉덩이","허벅지","종아리","목","컨디션"];
+
+/* ---------- 화면 생성 ---------- */
+function makeFes(){
+  document.getElementById("fesList").innerHTML = fesItems.map(([k,n])=>`
+    <div class="fes-card">
+      <div class="fes-head">${n}</div>
+      <div class="times">
+        ${[1,2,3].map(i=>`<label><input data-k="fes_${k}_${i}" type="checkbox" aria-label="${n} ${i}회"> ${i}회</label>`).join("")}
+      </div>
+      <div class="lr">
+        <input data-k="fes_${k}_r" type="text" placeholder="오른쪽">
+        <input data-k="fes_${k}_l" type="text" placeholder="왼쪽">
+      </div>
+    </div>`).join("");
+}
+function makeRepeats(){
+  document.getElementById("repeatList").innerHTML = repeatItems.map(([k,n])=>`
+    <div class="fes-card">
+      <div class="fes-head">${n}</div>
+      <div class="times">
+        ${[1,2,3,4].map(i=>`<label><input data-k="${k}_${i}" type="checkbox" aria-label="${n} ${i}회"> ${i}회</label>`).join("")}
+      </div>
+      <div class="label">짧은 기록</div>
+      <input data-k="${k}_note" type="text" placeholder="선택 기록">
+    </div>`).join("");
+}
+function makeCheckGroups(target, groups, prefix){
+  document.getElementById(target).innerHTML = Object.entries(groups).map(([group,items])=>`
+    <div class="med-group"><h3>${group}</h3>
+    ${items.map(([k,n])=>`<div class="check-row">
+      <input data-k="${prefix}_${k}" type="checkbox" aria-label="${n}">
+      <div>${n}</div>
+    </div>`).join("")}</div>`).join("");
+}
+function makeBody(){
+  document.getElementById("bodyList").innerHTML = bodyParts.map(n=>`
+    <div class="row"><b>${n}</b><input data-k="body_${n}" type="text" placeholder="${n} 기록"></div>
+  `).join("");
+}
+makeFes(); makeRepeats(); makeCheckGroups("medList",meds,"med"); makeCheckGroups("suppList",supps,"supp"); makeBody();
+
+/* ---------- 공통 ---------- */
+const dateInput  = document.getElementById("recordDate");
+const statusEl   = document.getElementById("saveStatus");
+const todayISO   = () => new Date().toLocaleDateString("sv-SE");
+let currentUser  = null;
+
+function getAllFields(){ return [...document.querySelectorAll("[data-k]")]; }
+function readCurrent(){
+  const data = {};
+  getAllFields().forEach(el => data[el.dataset.k] = el.type === "checkbox" ? el.checked : el.value);
+  return data;
+}
+function writeCurrent(data={}){
+  getAllFields().forEach(el=>{
+    const v = data[el.dataset.k];
+    if(el.type === "checkbox") el.checked = Boolean(v);
+    else el.value = v ?? "";
+  });
+}
+function setStatus(msg, hold){
+  statusEl.textContent = msg;
+  if(!hold) setTimeout(()=>{ statusEl.textContent = "자동 저장됩니다."; }, 1500);
+}
+
+/* ---------- 로그인 ---------- */
+const loginScreen = document.getElementById("loginScreen");
+const loginErr    = document.getElementById("loginErr");
+
+function showApp(user){
+  currentUser = user;
+  loginScreen.style.display = "none";
+  document.getElementById("app").style.display = "";
+  document.getElementById("tabbar").style.display = "";
+  document.getElementById("whoami").textContent = "로그인: " + user.email;
+  loadDate(todayISO());
+}
+function showLogin(){
+  currentUser = null;
+  loginScreen.style.display = "";
+  document.getElementById("app").style.display = "none";
+  document.getElementById("tabbar").style.display = "none";
+}
+
+document.getElementById("loginBtn").addEventListener("click", async ()=>{
+  loginErr.textContent = "";
+  const email = document.getElementById("loginEmail").value.trim();
+  const password = document.getElementById("loginPw").value;
+  if(!email || !password){ loginErr.textContent = "이메일과 비밀번호를 입력하세요."; return; }
+  const { data, error } = await sb.auth.signInWithPassword({ email, password });
+  if(error){ loginErr.textContent = "로그인 실패: " + error.message; return; }
+  showApp(data.user);
+});
+
+document.getElementById("signupBtn").addEventListener("click", async ()=>{
+  loginErr.textContent = "";
+  const email = document.getElementById("loginEmail").value.trim();
+  const password = document.getElementById("loginPw").value;
+  if(!email || password.length < 6){ loginErr.textContent = "이메일을 넣고, 비밀번호는 6자 이상으로 하세요."; return; }
+  const { data, error } = await sb.auth.signUp({ email, password });
+  if(error){ loginErr.textContent = "가입 실패: " + error.message; return; }
+  if(data.session){ showApp(data.user); }
+  else{ loginErr.textContent = "가입되었습니다. 이메일 인증이 필요하면 메일함을 확인하세요."; }
+});
+
+document.getElementById("logoutBtn").addEventListener("click", async ()=>{
+  if(!confirm("로그아웃할까요? 다시 로그인해야 기록을 볼 수 있습니다.")) return;
+  await sb.auth.signOut();
+  showLogin();
+});
+
+/* ---------- 저장 / 불러오기 ---------- */
+let saveTimer;
+function saveCurrent(){
+  if(!currentUser) return;
+  clearTimeout(saveTimer);
+  statusEl.textContent = "저장 중…";
+  saveTimer = setTimeout(async ()=>{
+    const payload = {
+      user_id: currentUser.id,
+      record_date: dateInput.value,
+      data: readCurrent()
+    };
+    const { error } = await sb.from("rehab_records")
+      .upsert(payload, { onConflict: "user_id,record_date" });
+    if(error){ setStatus("저장 실패: " + error.message, true); return; }
+    setStatus("저장됨");
+  }, 700);
+}
+
+async function loadDate(date){
+  dateInput.value = date;
+  setStatus("불러오는 중…", true);
+  const { data, error } = await sb.from("rehab_records")
+    .select("data")
+    .eq("record_date", date)
+    .maybeSingle();
+  if(error){ setStatus("불러오기 실패: " + error.message, true); return; }
+  writeCurrent(data ? data.data : {});
+  setStatus(data ? "기록을 불러왔습니다." : "새 기록입니다.");
+}
+
+document.addEventListener("input",  e=>{ if(e.target.matches("[data-k]")) saveCurrent(); });
+document.addEventListener("change", e=>{ if(e.target.matches("[data-k]")) saveCurrent(); });
+dateInput.addEventListener("change", ()=> loadDate(dateInput.value));
+document.getElementById("todayBtn").addEventListener("click", ()=> loadDate(todayISO()));
+document.getElementById("reloadBtn").addEventListener("click", ()=> loadDate(dateInput.value));
+
+/* ---------- 탭 ---------- */
+document.querySelectorAll(".tabbar button").forEach(btn=>btn.addEventListener("click",()=>{
+  document.querySelectorAll(".tabbar button").forEach(b=>b.classList.remove("active"));
+  btn.classList.add("active");
+  document.querySelectorAll(".screen").forEach(s=>s.classList.remove("active"));
+  document.getElementById("screen-"+btn.dataset.screen).classList.add("active");
+  if(btn.dataset.screen==="history") renderHistory();
+  window.scrollTo({top:0,behavior:"smooth"});
+}));
+
+/* ---------- 이전 기록 ---------- */
+function summaryFor(data){
+  let checks = 0;
+  Object.values(data || {}).forEach(v=>{ if(v===true) checks++; });
+  const angle = data && data.stand_angle ? `기립대 ${data.stand_angle}도` : "기립대 기록 없음";
+  return `${angle} · 체크 ${checks}개`;
+}
+async function renderHistory(){
+  const list = document.getElementById("historyList");
+  list.innerHTML = '<p class="note">불러오는 중…</p>';
+  const { data, error } = await sb.from("rehab_records")
+    .select("record_date, data")
+    .order("record_date", { ascending:false })
+    .limit(120);
+  if(error){ list.innerHTML = '<p class="err">불러오기 실패: '+error.message+'</p>'; return; }
+  if(!data.length){ list.innerHTML = '<p class="note">아직 저장된 기록이 없습니다.</p>'; return; }
+  list.innerHTML = data.map(r=>`
+    <div class="history-item"><b>${r.record_date}</b>
+      <div class="small">${summaryFor(r.data)}</div>
+      <button class="btn secondary" onclick="openHistory('${r.record_date}')">이 날짜 열기</button>
+    </div>`).join("");
+}
+window.openHistory = function(d){
+  loadDate(d);
+  document.querySelector('[data-screen="today"]').click();
+};
+
+/* ---------- 비우기 / 백업 ---------- */
+document.getElementById("clearTodayBtn").addEventListener("click", async ()=>{
+  if(!confirm(dateInput.value + " 기록을 비울까요?")) return;
+  const { error } = await sb.from("rehab_records")
+    .delete().eq("record_date", dateInput.value);
+  if(error){ alert("비우기 실패: " + error.message); return; }
+  writeCurrent({});
+  renderHistory();
+  setStatus("기록을 비웠습니다.");
+});
+
+document.getElementById("exportBtn").addEventListener("click", async ()=>{
+  const { data, error } = await sb.from("rehab_records")
+    .select("record_date, data").order("record_date", { ascending:false });
+  if(error){ alert("백업 실패: " + error.message); return; }
+  const bundle = { app:"남편 매일 재활 체크", exportedAt:new Date().toISOString(), records:{} };
+  data.forEach(r=> bundle.records[r.record_date] = r.data);
+  const blob = new Blob([JSON.stringify(bundle,null,2)], { type:"application/json" });
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = "재활기록_백업_" + todayISO() + ".json";
+  a.click();
+  URL.revokeObjectURL(a.href);
+});
+
+/* ---------- 시작 ---------- */
+(async ()=>{
+  const { data } = await sb.auth.getSession();
+  if(data.session) showApp(data.session.user);
+  else showLogin();
+})();
+</script>
+</body>
+</html>
